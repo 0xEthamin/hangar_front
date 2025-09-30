@@ -24,7 +24,7 @@ pub fn auth_callback() -> Html
             if let Some(ticket) = location.query_str()
                 .trim_start_matches('?')
                 .split('&')
-                .find_map(|p| p.strip_prefix("ticket=")) 
+                .find_map(|p: &str| p.strip_prefix("ticket=")) 
             {
                 let ticket = ticket.to_string();
                 wasm_bindgen_futures::spawn_local(async move 
