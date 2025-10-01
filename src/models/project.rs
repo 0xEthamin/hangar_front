@@ -32,3 +32,11 @@ pub struct DeployPayload
     pub image_url: String,
     pub participants: Vec<String>,
 }
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ProjectMetrics 
+{
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub memory_limit: f64,
+}

@@ -405,6 +405,124 @@ nav .logo-link::after {
     color: var(--color-text-secondary);
 }
 
+.logs-container {
+    background-color: #0d0d0d;
+    color: #e0e0e0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.logs-container .placeholder {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.log-line {
+    display: flex;
+    gap: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.log-timestamp {
+    color: #999;
+    flex-shrink: 0;
+}
+
+.log-message {
+    flex-grow: 1;
+}
+
+.log-message.log-info {
+    color: #a0a0a0;
+}
+
+.log-message.log-warn {
+    color: #F5A623;
+    font-weight: 500;
+}
+
+.log-message.log-error {
+    color: var(--color-danger);
+    font-weight: 700;
+}
+
+/* =================================== */
+/* == Composant Jauge (Gauge)       == */
+/* =================================== */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    align-items: center;
+    justify-items: center;
+}
+
+.gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-text-primary);
+}
+
+.gauge-svg {
+    width: 150px;
+    height: 150px;
+    transform: rotate(-90deg);
+}
+
+.gauge-background, .gauge-progress {
+    fill: none;
+    stroke-width: 12;
+}
+
+.gauge-background {
+    stroke: var(--color-border);
+}
+
+.gauge-progress {
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease-out;
+}
+
+.gauge-progress-normal { stroke: var(--color-primary-accent); }
+.gauge-progress-warning { stroke: #F5A623; }
+.gauge-progress-danger { stroke: var(--color-danger); }
+
+
+.gauge-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-anchor: middle;
+    text-align: center;
+    transform: rotate(90deg);
+    transform-origin: center;
+    fill: var(--color-text-primary);
+}
+
+.gauge-label {
+    font-size: 0.9rem;
+    text-anchor: middle;
+    transform: rotate(90deg);
+    transform-origin: center;
+    fill: var(--color-text-secondary);
+}
+
+.gauge-info {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    text-align: center;
+}
+
 /* =================================== */
 /* == Responsive (Mobile)           == */
 /* =================================== */

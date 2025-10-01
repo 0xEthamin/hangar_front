@@ -1,6 +1,6 @@
-use crate::models::project::{DeployPayload, Project, ProjectResponse, ProjectsResponse};
+use crate::models::project::{DeployPayload, Project, ProjectMetrics, ProjectResponse, ProjectsResponse};
 use gloo_net::http::Request;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 const API_ROOT: &str = "/api";
 
@@ -16,6 +16,19 @@ pub struct StatusResponse
 {
     pub status: Option<String>,
 }
+
+#[derive(Deserialize)]
+pub struct LogsResponse 
+{
+    pub logs: String,
+}
+
+#[derive(Serialize)]
+struct UpdateImagePayload 
+{
+    new_image_url: String,
+}
+
 
 /// Tente de parser un code d'erreur structuré depuis une réponse HTTP qui n'est pas "ok".
 /// Si le parsing échoue, retourne une erreur basée sur le statut HTTP.
@@ -226,5 +239,73 @@ pub async fn restart_project(project_id: i32) -> Result<(), String>
     {
         return Err(parse_simple_error_response(response).await);
     }
+    Ok(())
+}
+
+pub async fn get_project_logs(project_id: i32) -> Result<String, String> 
+{
+    let response = Request::get(&format!("{}/projects/{}/logs", API_ROOT, project_id))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?;
+
+    if !response.ok() 
+    {
+        return Err(parse_simple_error_response(response).await);
+    }
+
+    response
+        .json::<LogsResponse>()
+        .await
+        .map(|r| r.logs)
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+
+pub async fn get_project_metrics(project_id: i32) -> Result<ProjectMetrics, String> 
+{
+    let response = Request::get(&format!("{}/projects/{}/metrics", API_ROOT, project_id))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?;
+
+    if !response.ok() 
+    {
+        return Err(parse_simple_error_response(response).await);
+    }
+
+    response
+        .json::<ProjectMetrics>()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+
+
+pub async fn update_project_image(project_id: i32, new_image_url: &str) -> Result<(), ApiError> 
+{
+    let payload = UpdateImagePayload 
+    {
+        new_image_url: new_image_url.to_string(),
+    };
+
+    let response = Request::put(&format!("{}/projects/{}/image", API_ROOT, project_id))
+        .json(&payload)
+        .map_err(|_| ApiError 
+        { 
+            error_code: "CLIENT_SERIALIZATION_ERROR".to_string(),
+            details: None,
+        })?
+        .send()
+        .await
+        .map_err(|e| ApiError 
+        {
+            error_code: "NETWORK_ERROR".to_string(),
+            details: Some(e.to_string()),
+        })?;
+
+    if !response.ok() 
+    {
+        return Err(parse_detailed_error_response(response).await);
+    }
+
     Ok(())
 }
