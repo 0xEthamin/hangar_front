@@ -29,6 +29,13 @@ struct UpdateImagePayload
     new_image_url: String,
 }
 
+#[derive(Serialize)]
+struct ParticipantPayload 
+{
+    participant_id: String,
+}
+
+
 
 /// Tente de parser un code d'erreur structuré depuis une réponse HTTP qui n'est pas "ok".
 /// Si le parsing échoue, retourne une erreur basée sur le statut HTTP.
@@ -307,5 +314,41 @@ pub async fn update_project_image(project_id: i32, new_image_url: &str) -> Resul
         return Err(parse_detailed_error_response(response).await);
     }
 
+    Ok(())
+}
+
+pub async fn add_participant(project_id: i32, participant_id: &str) -> Result<(), ApiError> 
+{
+    let payload = ParticipantPayload 
+    {
+        participant_id: participant_id.to_string(),
+    };
+    let response = Request::post(&format!("{}/projects/{}/participants", API_ROOT, project_id))
+        .json(&payload)
+        .map_err(|_| ApiError { error_code: "CLIENT_ERROR".to_string(), details: None })?
+        .send()
+        .await
+        .map_err(|e| ApiError { error_code: "NETWORK_ERROR".to_string(), details: Some(e.to_string()) })?;
+
+    if !response.ok() 
+    {
+        return Err(parse_detailed_error_response(response).await);
+    }
+    Ok(())
+}
+pub async fn remove_participant(project_id: i32, participant_id: &str) -> Result<(), String> 
+{
+    let response = Request::delete(&format!(
+        "{}/projects/{}/participants/{}",
+        API_ROOT, project_id, participant_id
+    ))
+    .send()
+    .await
+    .map_err(|e| format!("Network error: {}", e))?;
+
+    if !response.ok() 
+    {
+        return Err(parse_simple_error_response(response).await);
+    }
     Ok(())
 }

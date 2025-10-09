@@ -96,7 +96,16 @@ pub fn app() -> Html
                     "update_image_description": "Deploy a new version of your application by providing a new Docker image URL. This will cause a short service interruption.",
                     "confirm_update_image": "Are you sure? Updating the image for '{name}' will cause a brief service interruption.",
                     "update_image_button": "Update image",
-                    "update_image_button_loading": "Updating..."
+                    "update_image_button_loading": "Updating...",
+                    "participants_list_label": "Participants:",
+                    "manage_participants_title": "Manage participants",
+                    "no_participants": "This project has no participants.",
+                    "remove_participant_button": "Remove",
+                    "confirm_remove_participant": "Are you sure you want to remove {name} from the project?",
+                    "add_participant_label": "Add a participant (login)",
+                    "add_participant_placeholder": "jdoe12345",
+                    "add_participant_button": "Add",
+                    "add_participant_button_loading": "Adding..."
                 },
                 "admin": {
                     "title": "Admin dashboard",
@@ -203,7 +212,16 @@ pub fn app() -> Html
                     "update_image_description": "Déployez une nouvelle version de votre application en fournissant une nouvelle URL d'image Docker. Cela entraînera une courte interruption de service.",
                     "confirm_update_image": "Êtes-vous sûr ? La mise à jour de l'image pour '{name}' entraînera une brève interruption de service.",
                     "update_image_button": "Mettre à jour l'image",
-                    "update_image_button_loading": "Mise à jour..."
+                    "update_image_button_loading": "Mise à jour...",
+                    "participants_list_label": "Participants :",
+                    "manage_participants_title": "Gérer les participants",
+                    "no_participants": "Ce projet n'a aucun participant.",
+                    "remove_participant_button": "Retirer",
+                    "confirm_remove_participant": "Êtes-vous sûr de vouloir retirer {name} du projet ?",
+                    "add_participant_label": "Ajouter un participant (login)",
+                    "add_participant_placeholder": "situ12345",
+                    "add_participant_button": "Ajouter",
+                    "add_participant_button_loading": "Ajout en cours..."
                 },
                 "admin": {
                     "title": "Tableau de bord admin",
