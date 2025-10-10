@@ -1,27 +1,62 @@
 use std::collections::HashSet;
 
-use crate::{contexts::user_context::use_user, router::AppRoute, services::project_service::{self, ApiError}};
+use crate::{
+    contexts::user_context::use_user,
+    models::project::DeployPayload,
+    router::AppRoute,
+    services::project_service::{self, ApiError},
+};
 use i18nrs::yew::use_translation;
 use yew::prelude::*;
 use yew_router::prelude::*;
+
+#[derive(PartialEq, Clone, Copy)]
+enum DeployMethod 
+{
+    GitHub,
+    Direct,
+}
+
+const GITHUB_APP_NAME: &str = "hangar-app";
 
 #[function_component(CreateProject)]
 pub fn create_project() -> Html 
 {
     let (i18n, _) = use_translation();
     let user_context = use_user();
+    let navigator = use_navigator().unwrap();
+    let location = use_location().unwrap();
+
     let project_name = use_state(String::new);
-    let image_url = use_state(String::new);
     let participants_str = use_state(String::new);
+    let github_repo_url = use_state(String::new);
+    let image_url = use_state(String::new);
+
+    let active_method = use_state(|| DeployMethod::GitHub);
     let is_loading = use_state(|| false);
     let error = use_state(|| None::<ApiError>);
-    let navigator = use_navigator().unwrap();
+
+    let show_success_banner = use_state(|| false);
+
+    {
+        let show_success_banner = show_success_banner.clone();
+        use_effect_with((), move |_| 
+        {
+            if location.query_str().contains("github_connected=true") 
+            {
+                show_success_banner.set(true);
+            }
+            || ()
+        });
+    }
 
     let on_submit = 
     {
         let project_name = project_name.clone();
-        let image_url = image_url.clone();
         let participants_str = participants_str.clone();
+        let github_repo_url = github_repo_url.clone();
+        let image_url = image_url.clone();
+        let active_method = active_method.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
         let navigator = navigator.clone();
@@ -30,9 +65,14 @@ pub fn create_project() -> Html
         Callback::from(move |e: SubmitEvent| 
         {
             e.prevent_default();
+            is_loading.set(true);
+            error.set(None);
+
             let project_name = project_name.clone();
-            let image_url = image_url.clone();
             let participants_str = participants_str.clone();
+            let github_repo_url = github_repo_url.clone();
+            let image_url = image_url.clone();
+            let active_method = active_method.clone();
             let is_loading = is_loading.clone();
             let error = error.clone();
             let navigator = navigator.clone();
@@ -43,7 +83,7 @@ pub fn create_project() -> Html
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
                 .collect();
-            
+
             if let Some(login) = &user_login 
             {
                 if participants_set.contains(login) 
@@ -53,24 +93,41 @@ pub fn create_project() -> Html
                         error_code: "OWNER_CANNOT_BE_PARTICIPANT".to_string(),
                         details: None,
                     }));
+                    is_loading.set(false);
                     return;
                 }
             }
             let participants: Vec<String> = participants_set.into_iter().collect();
 
+            let mut payload = DeployPayload 
+            {
+                project_name: (*project_name).clone(),
+                participants,
+                ..Default::default()
+            };
+
+            match *active_method 
+            {
+                DeployMethod::GitHub => 
+                {
+                    payload.github_repo_url = Some((*github_repo_url).clone());
+                }
+                DeployMethod::Direct => 
+                {
+                    payload.image_url = Some((*image_url).clone());
+                }
+            }
+
             wasm_bindgen_futures::spawn_local(async move 
             {
-                is_loading.set(true);
-                error.set(None);
-
-                let result = project_service::deploy_project(&project_name, &image_url, participants).await;
+                let result = project_service::deploy_project(payload).await;
                 is_loading.set(false);
 
                 match result 
                 {
                     Ok(project) => 
                     {
-                        navigator.push(&AppRoute::ProjectDashboard { id: project.id });
+                        navigator.push(&AppRoute::ProjectDashboard { id: project.project.id });
                     }
                     Err(api_error) => 
                     {
@@ -90,14 +147,142 @@ pub fn create_project() -> Html
         })
     };
 
+    let select_method = |method: DeployMethod| 
+    {
+        let active_method = active_method.clone();
+        Callback::from(move |_| 
+        {
+            active_method.set(method);
+        })
+    };
+
+    let render_error = |err: &ApiError| 
+    {
+        let error_key = format!("errors.{}", err.error_code);
+        let main_message = i18n.t(&error_key);
+        let display_message =
+            if main_message.starts_with("Key '") && main_message.contains(" not found for language ") 
+            {
+                i18n.t("errors.DEFAULT")
+            } 
+            else 
+            {
+                main_message
+            };
+
+        html! 
+        {
+            <div class="error">
+                <p>{ display_message }</p>
+                {
+                    if err.error_code == "GITHUB_ACCOUNT_NOT_LINKED" 
+                    {
+                        let github_app_install_url = format!(
+                            "https://github.com/apps/{}/installations/new",
+                            GITHUB_APP_NAME
+                        );
+                        
+                        html!
+                        {
+                            <div style="margin-top: var(--spacing-md)">
+                                <p>{ i18n.t("create_project.link_github_prompt") }</p>
+                                <a href={github_app_install_url} target="_blank" class="button-primary">
+                                    { i18n.t("create_project.link_github_button") }
+                                </a>
+                            </div>
+                        }
+                    }
+
+                    else if err.error_code == "GITHUB_REPO_NOT_ACCESSIBLE"
+                    {
+                        let github_installations_url = "https://github.com/settings/installations";
+
+                        html!
+                        {
+                             <div style="margin-top: var(--spacing-md)">
+                                <a href={github_installations_url} target="_blank" class="button-primary">
+                                    { i18n.t("create_project.link_github_button") }
+                                </a>
+                            </div>
+                        }
+                    }
+                    else if err.error_code == "IMAGE_SCAN_FAILED" 
+                    {
+                        if let Some(details) = &err.details 
+                        {
+                            html!
+                            {
+                                <div class="error-details-box">
+                                    <strong>{ "Grype Security Report:" }</strong>
+                                    <pre><code>{ details.clone() }</code></pre>
+                                </div>
+                            }
+                        } 
+                        else { html! {} }
+                    } 
+                    else { html! {} }
+                }
+            </div>
+        }
+    };
+    
+    let tab_class = |method: DeployMethod| 
+    {
+        if *active_method == method 
+        {
+            "tab active"
+        } 
+        else 
+        {
+            "tab"
+        }
+    };
+
+    let on_close_banner = 
+    {
+        let show_success_banner = show_success_banner.clone();
+        Callback::from(move |_| 
+        {
+            show_success_banner.set(false);
+        })
+    };
+
     html! 
     {
         <div class="create-project-page" style="max-width: 700px; margin: auto;">
-            <h1>{ i18n.t("create_project.title") }</h1>
-            <p>{ i18n.t("create_project.description") }</p>
 
-            <form onsubmit={on_submit} class="card">
-                
+            if *show_success_banner 
+            {
+                <div class="success-banner">
+                    <p>{ i18n.t("create_project.github_connected_success") }</p>
+                    <button onclick={on_close_banner}>{"✖"}</button>
+                </div>
+            }
+
+            <h1>{ i18n.t("create_project.title") }</h1>
+
+            <div class="tabs-container">
+                <button class={tab_class(DeployMethod::GitHub)} onclick={select_method(DeployMethod::GitHub)}>
+                    { i18n.t("create_project.github_tab") }
+                </button>
+                <button class={tab_class(DeployMethod::Direct)} onclick={select_method(DeployMethod::Direct)}>
+                    { i18n.t("create_project.direct_tab") }
+                </button>
+            </div>
+
+            <form onsubmit={on_submit} class="card" style="border-top-left-radius: 0;">
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-xl);">
+                {
+                    if *active_method == DeployMethod::GitHub
+                    {
+                        i18n.t("create_project.description_github")
+                    }
+                    else
+                    {
+                        i18n.t("create_project.description_direct")
+                    }
+                }
+                </p>
                 <div class="form-group">
                     <label for="project_name">{ i18n.t("create_project.name_label") }</label>
                     <input type="text" id="project_name" class="text-input"
@@ -108,14 +293,28 @@ pub fn create_project() -> Html
                     <small style="color: var(--color-text-secondary)">{ i18n.t("create_project.name_help") }</small>
                 </div>
 
-                <div class="form-group">
-                    <label for="image_url">{ i18n.t("create_project.image_label") }</label>
-                    <input type="text" id="image_url" class="text-input"
-                           placeholder={i18n.t("create_project.image_placeholder")}
-                           value={(*image_url).clone()}
-                           onchange={handle_change(image_url.clone())}
-                           required=true />
-                </div>
+                if *active_method == DeployMethod::GitHub
+                {
+                    <div class="form-group">
+                        <label for="github_repo_url">{ i18n.t("create_project.github_repo_url_label") }</label>
+                        <input type="text" id="github_repo_url" class="text-input"
+                            placeholder={i18n.t("create_project.github_repo_url_placeholder")}
+                            value={(*github_repo_url).clone()}
+                            onchange={handle_change(github_repo_url.clone())}
+                            required=true />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label for="image_url">{ i18n.t("create_project.image_label") }</label>
+                        <input type="text" id="image_url" class="text-input"
+                            placeholder={i18n.t("create_project.image_placeholder")}
+                            value={(*image_url).clone()}
+                            onchange={handle_change(image_url.clone())}
+                            required=true />
+                    </div>
+                }
 
                 <div class="form-group">
                     <label for="participants">{ i18n.t("create_project.participants_label") }</label>
@@ -126,55 +325,7 @@ pub fn create_project() -> Html
                      <small style="color: var(--color-text-secondary)">{ i18n.t("create_project.participants_help") }</small>
                 </div>
 
-                {
-                    if let Some(err) = &*error 
-                    {
-                        let error_key = format!("errors.{}", err.error_code);
-                        let main_message = i18n.t(&error_key);
-                        let display_message = if main_message.starts_with("Key '") && main_message.contains(" not found for language ") 
-                        {
-                            i18n.t("errors.DEFAULT")
-                        } 
-                        else 
-                        {
-                            main_message
-                        };
-
-                        html! 
-                        {
-                            <>
-                                <p class="error">{ display_message }</p>
-                                {
-                                    if err.error_code == "IMAGE_SCAN_FAILED" 
-                                    {
-                                        if let Some(details) = &err.details 
-                                        {
-                                            html! 
-                                            {
-                                                <div class="error-details-box">
-                                                    <strong>{ "Grype Security Report:" }</strong>
-                                                    <pre><code>{ details.clone() }</code></pre>
-                                                </div>
-                                            }
-                                        } 
-                                        else 
-                                        {
-                                            html! {}
-                                        }
-                                    } 
-                                    else 
-                                    {
-                                        html! {}
-                                    }
-                                }
-                            </>
-                        }
-                    } 
-                    else 
-                    {
-                        html! {}
-                    }
-                }
+                { if let Some(err) = &*error { render_error(err) } else { html! {} } }
 
                 <button type="submit" class="button-primary" disabled={*is_loading}>
                     { if *is_loading { i18n.t("create_project.submit_button_loading") } else { i18n.t("create_project.submit_button") } }

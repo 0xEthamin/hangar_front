@@ -1,7 +1,7 @@
 use crate::
 {
     contexts::user_context::use_user,
-    models::project::Project,
+    models::project::{Project, ProjectSourceType},
     router::AppRoute,
     services::project_service,
 };
@@ -23,7 +23,10 @@ pub fn home() -> Html
     } 
     else 
     {
-        let callback_url = format!("{}/auth/callback", web_sys::window().unwrap().location().origin().unwrap());
+        let callback_url = format!(
+            "{}/auth/callback",
+            web_sys::window().unwrap().location().origin().unwrap()
+        );
         let login_url = format!("{}?service={}", CAS_LOGIN_URL, callback_url);
         html! 
         {
@@ -76,7 +79,9 @@ fn dashboard() -> Html
         });
     }
 
-    let welcome_message = i18n.t("dashboard.welcome").replace("{name}", &user_context.user.as_ref().unwrap().name);
+    let welcome_message = i18n
+        .t("dashboard.welcome")
+        .replace("{name}", &user_context.user.as_ref().unwrap().name);
 
     html! 
     {
@@ -134,20 +139,27 @@ fn project_grid(props: &ProjectGridProps) -> Html
 
 fn project_card(project: &Project, i18n: &i18nrs::I18n) -> Html 
 {
+    let (source_icon, source_title) = match project.source 
+    {
+        ProjectSourceType::Github => ("/assets/github-mark-white.svg", "GitHub"),
+        ProjectSourceType::Direct => ("/assets/docker-logo-white.svg", "Direct Image"),
+    };
+
     html! 
     {
         <Link<AppRoute> to={AppRoute::ProjectDashboard { id: project.id }} classes="card-link">
             <div class="card project-card">
                 <div class="project-header">
                     <h3>{ &project.name }</h3>
+                    <img src={source_icon} title={source_title} alt={source_title} style="height: 24px; width: 24px;" />
                 </div>
                 <div class="project-details">
                     <span>{ i18n.t("common.owner") }</span>
                     <span class="detail-value">{ &project.owner }</span>
                 </div>
                  <div class="project-details">
-                    <span>{ i18n.t("common.image") }</span>
-                    <span class="detail-value" style="word-break: break-all;">{ &project.image_url }</span>
+                    <span>{ i18n.t("common.source_url") }</span>
+                    <span class="detail-value" style="word-break: break-all;">{ &project.source_url }</span>
                 </div>
             </div>
         </Link<AppRoute>>

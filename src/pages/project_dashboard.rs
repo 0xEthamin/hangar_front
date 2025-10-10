@@ -6,10 +6,11 @@ use i18nrs::yew::use_translation;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::{
+use crate::
+{
     components::gauge::Gauge,
     contexts::user_context::use_user,
-    models::project::{Project, ProjectMetrics},
+    models::project::{ProjectDetails, ProjectMetrics, ProjectSourceType},
     router::AppRoute,
     services::project_service::{self, ApiError},
 };
@@ -543,36 +544,33 @@ fn update_image_form(props: &UpdateImageFormProps) -> Html
 }
 
 #[function_component(ProjectDashboard)]
-pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
+pub fn project_dashboard(props: &ProjectDashboardProps) -> Html 
 {
     let (i18n, _) = use_translation();
     let user_context = use_user();
     let navigator = use_navigator().unwrap();
 
-    let project = use_state(|| None::<Project>);
+    let project_details = use_state(|| None::<ProjectDetails>);
     let error = use_state(|| None::<String>);
     let deletion_error = use_state(|| None::<String>);
-
     let logs = use_state(|| None::<String>);
     let logs_error = use_state(|| None::<String>);
     let are_logs_loading = use_state(|| false);
-
     let is_controlling = use_state(|| false);
     let trigger_reload = use_state(|| 0_u32);
 
-    // Fetch project details
     {
-        let project = project.clone();
+        let project_details = project_details.clone();
         let error = error.clone();
         let project_id = props.project_id;
 
-        use_effect_with((*trigger_reload, project_id), move |_|
+        use_effect_with((*trigger_reload, project_id), move |_| 
         {
-            wasm_bindgen_futures::spawn_local(async move
+            wasm_bindgen_futures::spawn_local(async move 
             {
-                match project_service::get_project_details(project_id).await
+                match project_service::get_project_details(project_id).await 
                 {
-                    Ok(p) => project.set(Some(p)),
+                    Ok(pd) => project_details.set(Some(pd)),
                     Err(e) => error.set(Some(e)),
                 }
             });
@@ -580,10 +578,10 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
         });
     }
 
-    let on_participants_update =
+    let on_participants_update = 
     {
         let trigger_reload = trigger_reload.clone();
-        Callback::from(move |_|
+        Callback::from(move |_| 
         {
             trigger_reload.set(*trigger_reload + 1);
         })
@@ -609,19 +607,14 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
     }
 
     // Loading state rendering
-    let Some(p) = &*project else
+    let Some(details) = &*project_details else
     {
-        return html!
-        {
-            <div class="loading-spinner">{ i18n.t("common.loading") }</div>
-        };
+        return html! { <div class="loading-spinner">{ i18n.t("common.loading") }</div> };
     };
 
     // Project loaded - render dashboard
-    let is_owner = user_context
-        .user
-        .as_ref()
-        .map_or(false, |u| u.login == p.owner);
+    let p = &details.project;
+    let is_owner = user_context.user.as_ref().map_or(false, |u| u.login == p.owner);
 
     let created_at_formatted = p.created_at
         .split('T')
@@ -752,7 +745,6 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
         <div>
             <h1>{ i18n.t("project_dashboard.title") }{ format!(": {}", p.name) }</h1>
 
-            // Project Info Card
             <div class="card">
                 <h2>{ i18n.t("project_dashboard.card_title_info") }</h2>
                 <p>
@@ -761,25 +753,24 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
                 </p>
                 <p>{ format!("{}: {}", i18n.t("common.owner"), p.owner) }</p>
 
-                if let Some(participants) = &p.participants
+                if !details.participants.is_empty()
                 {
-                    if !participants.is_empty()
-                    {
-                        <p>
-                            { i18n.t("project_dashboard.participants_list_label") }
-                            { " " }
-                            { participants.join(", ") }
-                        </p>
-                    }
+                    <p>
+                        { i18n.t("project_dashboard.participants_list_label") }
+                        { " " }
+                        { details.participants.join(", ") }
+                    </p>
                 }
 
                 <p>{ created_on_message }</p>
                 <p style="word-break: break-all;">
-                    { format!("{}: {}", i18n.t("common.image"), p.image_url) }
+                    { format!("{}: {}", i18n.t("common.source_url"), p.source_url) }
+                </p>
+                 <p style="word-break: break-all;">
+                    { format!("{}: {}", i18n.t("common.deployed_image"), p.deployed_image_tag) }
                 </p>
             </div>
 
-            // Control Card (owner only)
             if is_owner
             {
                 <div class="card" style="margin-top: var(--spacing-lg);">
@@ -803,7 +794,6 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
                 </div>
             }
 
-            // Logs Card
             <div class="card" style="margin-top: var(--spacing-lg);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
                     <h2>{ i18n.t("project_dashboard.card_title_logs") }</h2>
@@ -856,29 +846,25 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
                 </div>
             </div>
 
-            // Metrics Card
             <div class="card" style="margin-top: var(--spacing-lg);">
                 <h2>{ i18n.t("project_dashboard.card_title_metrics") }</h2>
                 <ProjectMetricsDisplay project_id={p.id} />
             </div>
 
-            // Participant Manager (owner only)
             if is_owner
             {
                 <ParticipantManager
                     project_id={p.id}
-                    participants={p.participants.clone().unwrap_or_default()}
+                    participants={details.participants.clone()}
                     on_update={on_participants_update}
                 />
             }
 
-            // Update Image Form (owner only)
-            if is_owner
+            if is_owner && p.source == ProjectSourceType::Direct
             {
                 <UpdateImageForm project_id={p.id} project_name={p.name.clone()} />
             }
 
-            // Danger Zone (owner only)
             if is_owner
             {
                 <div class="card" style="margin-top: var(--spacing-lg); border-color: var(--color-danger);">

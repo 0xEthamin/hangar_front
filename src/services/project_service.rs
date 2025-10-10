@@ -1,4 +1,6 @@
-use crate::models::project::{DeployPayload, Project, ProjectMetrics, ProjectResponse, ProjectsResponse};
+use crate::models::project::{
+    DeployPayload, Project, ProjectDetails, ProjectDetailsResponse, ProjectMetrics, ProjectsResponse,
+};
 use gloo_net::http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -35,15 +37,14 @@ struct ParticipantPayload
     participant_id: String,
 }
 
-
-
-/// Tente de parser un code d'erreur structuré depuis une réponse HTTP qui n'est pas "ok".
-/// Si le parsing échoue, retourne une erreur basée sur le statut HTTP.
 async fn parse_simple_error_response(response: gloo_net::http::Response) -> String 
 {
     #[derive(Deserialize)]
-    struct SimpleErrorResponse { error_code: String }
-    
+    struct SimpleErrorResponse 
+    {
+        error_code: String,
+    }
+
     if let Ok(error_body) = response.json::<SimpleErrorResponse>().await 
     {
         error_body.error_code
@@ -70,8 +71,7 @@ pub async fn parse_detailed_error_response(response: gloo_net::http::Response) -
     }
 }
 
-
-pub async fn get_owned_projects() -> Result<Vec<Project>, String>
+pub async fn get_owned_projects() -> Result<Vec<Project>, String> 
 {
     let response = Request::get(&format!("{}/projects/owned", API_ROOT))
         .send()
@@ -79,8 +79,8 @@ pub async fn get_owned_projects() -> Result<Vec<Project>, String>
         .map_err(|e| format!("Network error: {}", e))?;
 
     if !response.ok() 
-    { 
-        return Err(parse_simple_error_response(response).await); 
+    {
+        return Err(parse_simple_error_response(response).await);
     }
 
     response
@@ -90,16 +90,16 @@ pub async fn get_owned_projects() -> Result<Vec<Project>, String>
         .map_err(|e| format!("Failed to parse response: {}", e))
 }
 
-pub async fn get_participating_projects() -> Result<Vec<Project>, String>
+pub async fn get_participating_projects() -> Result<Vec<Project>, String> 
 {
     let response = Request::get(&format!("{}/projects/participations", API_ROOT))
         .send()
         .await
         .map_err(|e| format!("Network error: {}", e))?;
 
-    if !response.ok()
+    if !response.ok() 
     {
-        return Err(parse_simple_error_response(response).await); 
+        return Err(parse_simple_error_response(response).await);
     }
 
     response
@@ -109,23 +109,12 @@ pub async fn get_participating_projects() -> Result<Vec<Project>, String>
         .map_err(|e| format!("Failed to parse response: {}", e))
 }
 
-pub async fn deploy_project(
-    project_name: &str,
-    image_url: &str,
-    participants: Vec<String>,
-) -> Result<Project, ApiError>
+pub async fn deploy_project(payload: DeployPayload) -> Result<ProjectDetails, ApiError> 
 {
-    let payload = DeployPayload
-    {
-        project_name: project_name.to_string(),
-        image_url: image_url.to_string(),
-        participants,
-    };
-
     let response = Request::post(&format!("{}/projects/deploy", API_ROOT))
         .json(&payload)
         .map_err(|_| ApiError 
-        { 
+        {
             error_code: "CLIENT_SERIALIZATION_ERROR".to_string(),
             details: None,
         })?
@@ -137,52 +126,51 @@ pub async fn deploy_project(
             details: Some(e.to_string()),
         })?;
 
-
     if !response.ok() 
     {
         return Err(parse_detailed_error_response(response).await);
     }
 
     response
-        .json::<ProjectResponse>()
+        .json::<ProjectDetailsResponse>()
         .await
         .map(|pr| pr.project)
-        .map_err(|e| ApiError
+        .map_err(|e| ApiError 
         {
             error_code: "RESPONSE_PARSE_ERROR".to_string(),
             details: Some(e.to_string()),
         })
 }
 
-pub async fn purge_project(project_id: i32) -> Result<(), String>
+pub async fn purge_project(project_id: i32) -> Result<(), String> 
 {
     let response = Request::delete(&format!("{}/projects/{}", API_ROOT, project_id))
         .send()
         .await
         .map_err(|e| format!("Network error: {}", e))?;
 
-    if !response.ok()
+    if !response.ok() 
     {
-        return Err(parse_simple_error_response(response).await); 
+        return Err(parse_simple_error_response(response).await);
     }
 
     Ok(())
 }
 
-pub async fn get_project_details(project_id: i32) -> Result<Project, String>
+pub async fn get_project_details(project_id: i32) -> Result<ProjectDetails, String> 
 {
     let response = Request::get(&format!("{}/projects/{}", API_ROOT, project_id))
         .send()
         .await
         .map_err(|e| format!("Network error: {}", e))?;
 
-    if !response.ok()
+    if !response.ok() 
     {
-        return Err(parse_simple_error_response(response).await); 
+        return Err(parse_simple_error_response(response).await);
     }
 
     response
-        .json::<ProjectResponse>()
+        .json::<ProjectDetailsResponse>()
         .await
         .map(|r| r.project)
         .map_err(|e| format!("Failed to parse response: {}", e))
@@ -286,7 +274,6 @@ pub async fn get_project_metrics(project_id: i32) -> Result<ProjectMetrics, Stri
         .map_err(|e| format!("Failed to parse response: {}", e))
 }
 
-
 pub async fn update_project_image(project_id: i32, new_image_url: &str) -> Result<(), ApiError> 
 {
     let payload = UpdateImagePayload 
@@ -297,7 +284,7 @@ pub async fn update_project_image(project_id: i32, new_image_url: &str) -> Resul
     let response = Request::put(&format!("{}/projects/{}/image", API_ROOT, project_id))
         .json(&payload)
         .map_err(|_| ApiError 
-        { 
+        {
             error_code: "CLIENT_SERIALIZATION_ERROR".to_string(),
             details: None,
         })?
@@ -325,10 +312,18 @@ pub async fn add_participant(project_id: i32, participant_id: &str) -> Result<()
     };
     let response = Request::post(&format!("{}/projects/{}/participants", API_ROOT, project_id))
         .json(&payload)
-        .map_err(|_| ApiError { error_code: "CLIENT_ERROR".to_string(), details: None })?
+        .map_err(|_| ApiError 
+        {
+            error_code: "CLIENT_ERROR".to_string(),
+            details: None,
+        })?
         .send()
         .await
-        .map_err(|e| ApiError { error_code: "NETWORK_ERROR".to_string(), details: Some(e.to_string()) })?;
+        .map_err(|e| ApiError 
+        {
+            error_code: "NETWORK_ERROR".to_string(),
+            details: Some(e.to_string()),
+        })?;
 
     if !response.ok() 
     {
@@ -336,6 +331,7 @@ pub async fn add_participant(project_id: i32, participant_id: &str) -> Result<()
     }
     Ok(())
 }
+
 pub async fn remove_participant(project_id: i32, participant_id: &str) -> Result<(), String> 
 {
     let response = Request::delete(&format!(
