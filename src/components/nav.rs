@@ -65,17 +65,19 @@ pub fn nav() -> Html
                 <ul class={nav_links_class}>
                     <li><Link<AppRoute> to={AppRoute::Home}>{ i18n.t("nav.home") }</Link<AppRoute>></li>
                     {
-                        if user_context.user.is_some()
+                        if let Some(user) = &user_context.user 
                         {
-                            html!
+                            html! 
                             {
                                 <>
+                                    if user.is_admin 
+                                    {
+                                        <li><Link<AppRoute> to={AppRoute::Admin}>{ i18n.t("nav.admin") }</Link<AppRoute>></li>
+                                    }
                                     <li><button class="button-danger" onclick={on_logout}>{ i18n.t("nav.logout") }</button></li>
                                 </>
                             }
-                        }
-                        else
-                        {
+                        } else {
                             html!{}
                         }
                     }

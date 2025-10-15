@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::{
     contexts::user_context::use_user,
@@ -19,6 +19,16 @@ enum DeployMethod
 
 const GITHUB_APP_NAME: &str = "hangar-app";
 
+fn handle_change_textarea(state: UseStateHandle<String>) -> Callback<Event>
+{
+    Callback::from(move |e: Event|
+    {
+        let value = e.target_unchecked_into::<web_sys::HtmlTextAreaElement>().value();
+        state.set(value);
+    })
+}
+
+
 #[function_component(CreateProject)]
 pub fn create_project() -> Html 
 {
@@ -31,6 +41,8 @@ pub fn create_project() -> Html
     let participants_str = use_state(String::new);
     let github_repo_url = use_state(String::new);
     let image_url = use_state(String::new);
+    let env_vars_str = use_state(String::new);
+    let volume_path_str = use_state(String::new);
 
     let active_method = use_state(|| DeployMethod::GitHub);
     let is_loading = use_state(|| false);
@@ -61,6 +73,8 @@ pub fn create_project() -> Html
         let error = error.clone();
         let navigator = navigator.clone();
         let user_login = user_context.user.as_ref().map(|u| u.login.clone());
+        let env_vars_str = env_vars_str.clone();
+        let volume_path_str = volume_path_str.clone();
 
         Callback::from(move |e: SubmitEvent| 
         {
@@ -77,6 +91,8 @@ pub fn create_project() -> Html
             let error = error.clone();
             let navigator = navigator.clone();
             let user_login = user_login.clone();
+            let env_vars_str = env_vars_str.clone();
+            let volume_path_str = volume_path_str.clone();
 
             let participants_set: HashSet<String> = (*participants_str)
                 .split(',')
@@ -99,10 +115,19 @@ pub fn create_project() -> Html
             }
             let participants: Vec<String> = participants_set.into_iter().collect();
 
+            let env_vars: HashMap<String, String> = (*env_vars_str)
+                .lines()
+                .filter_map(|line| line.trim().split_once('='))
+                .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
+                .filter(|(k, _)| !k.is_empty())
+                .collect();
+
             let mut payload = DeployPayload 
             {
                 project_name: (*project_name).clone(),
                 participants,
+                env_vars: if env_vars.is_empty() { None } else { Some(env_vars) },
+                persistent_volume_path: if (*volume_path_str).trim().is_empty() { None } else { Some((*volume_path_str).trim().to_string()) },
                 ..Default::default()
             };
 
@@ -314,6 +339,17 @@ pub fn create_project() -> Html
                             onchange={handle_change(image_url.clone())}
                             required=true />
                     </div>
+
+                    <div class="form-group">
+                        <label for="volume_path">{ i18n.t("create_project.volume_path_label") }</label>
+                        <input type="text" id="volume_path" class="text-input"
+                               placeholder="/data/uploads"
+                               value={(*volume_path_str).clone()}
+                               onchange={handle_change(volume_path_str.clone())} />
+                        <small style="color: var(--color-text-secondary)">
+                            { i18n.t("create_project.volume_path_help") }
+                        </small>
+                    </div>
                 }
 
                 <div class="form-group">
@@ -323,6 +359,17 @@ pub fn create_project() -> Html
                            value={(*participants_str).clone()}
                            onchange={handle_change(participants_str.clone())} />
                      <small style="color: var(--color-text-secondary)">{ i18n.t("create_project.participants_help") }</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="env_vars">{ i18n.t("create_project.env_vars_label") }</label>
+                    <textarea id="env_vars" class="text-input"
+                           placeholder="DB_HOST=localhost\nAPI_KEY=your_secret_key"
+                           value={(*env_vars_str).clone()}
+                           onchange={handle_change_textarea(env_vars_str.clone())}
+                           rows="4">
+                    </textarea>
+                    <small style="color: var(--color-text-secondary)">{ i18n.t("create_project.env_vars_help") }</small>
                 </div>
 
                 { if let Some(err) = &*error { render_error(err) } else { html! {} } }

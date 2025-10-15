@@ -1,5 +1,5 @@
 use crate::models::project::{
-    DeployPayload, Project, ProjectDetails, ProjectDetailsResponse, ProjectMetrics, ProjectsResponse,
+    DeployPayload, DownProjectInfo, DownProjectsResponse, GlobalMetrics, Project, ProjectDetails, ProjectDetailsResponse, ProjectMetrics, ProjectsResponse, UpdateEnvPayload
 };
 use gloo_net::http::Request;
 use serde::{Deserialize, Serialize};
@@ -346,5 +346,72 @@ pub async fn remove_participant(project_id: i32, participant_id: &str) -> Result
     {
         return Err(parse_simple_error_response(response).await);
     }
+    Ok(())
+}
+
+pub async fn get_all_projects_admin() -> Result<Vec<Project>, String> 
+{
+    let response = Request::get(&format!("{}/admin/projects", API_ROOT))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?;
+
+    if !response.ok() 
+    {
+        return Err(parse_simple_error_response(response).await);
+    }
+
+    response
+        .json::<ProjectsResponse>()
+        .await
+        .map(|r| r.projects)
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+
+pub async fn get_global_metrics_admin() -> Result<GlobalMetrics, String> 
+{
+    Request::get(&format!("{}/admin/metrics", API_ROOT))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?
+        .json::<GlobalMetrics>()
+        .await
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+
+pub async fn get_down_projects_admin() -> Result<Vec<DownProjectInfo>, String> 
+{
+    Request::get(&format!("{}/admin/projects/down", API_ROOT))
+        .send()
+        .await
+        .map_err(|e| format!("Network error: {}", e))?
+        .json::<DownProjectsResponse>()
+        .await
+        .map(|r| r.down_projects)
+        .map_err(|e| format!("Failed to parse response: {}", e))
+}
+
+pub async fn update_env_vars(project_id: i32, payload: &UpdateEnvPayload) -> Result<(), ApiError>
+{
+    let response = Request::put(&format!("{}/projects/{}/env", API_ROOT, project_id))
+        .json(payload)
+        .map_err(|_| ApiError 
+        {
+            error_code: "CLIENT_ERROR".to_string(),
+            details: None,
+        })?
+        .send()
+        .await
+        .map_err(|e| ApiError 
+        {
+            error_code: "NETWORK_ERROR".to_string(),
+            details: Some(e.to_string()),
+        })?;
+
+    if !response.ok()
+    {
+        return Err(parse_detailed_error_response(response).await);
+    }
+
     Ok(())
 }

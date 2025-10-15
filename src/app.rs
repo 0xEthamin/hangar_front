@@ -79,7 +79,11 @@ pub fn app() -> Html
                     "submit_button_loading": "Deploying...",
                     "link_github_prompt": "To deploy from GitHub, you must first install the Hangar GitHub App on your account or organization.",
                     "link_github_button": "Install GitHub App",
-                    "github_connected_success": "GitHub App connected successfully! You can now retry deploying your project." 
+                    "github_connected_success": "GitHub App connected successfully! You can now retry deploying your project.",
+                    "volume_path_label": "Persistent Volume Path (Optional)",
+                    "volume_path_help": "Path inside the container to persist.",
+                    "env_vars_label": "Environment Variables (Optional)",
+                    "env_vars_help": "One variable per line, in KEY=VALUE format."
                 },
                 "project_dashboard": {
                     "title": "Project dashboard",
@@ -90,7 +94,6 @@ pub fn app() -> Html
                     "card_title_metrics": "Metrics (in %)",
                     "card_title_danger": "Danger zone",
                     "logs_placeholder": "Click 'Fetch logs' to display container logs",
-                    "metrics_placeholder": "[Placeholder for CPU/RAM usage]",
                     "delete_button": "Delete project",
                     "confirm_delete": "Are you sure you want to permanently delete the project '{name}'? This action is irreversible.",
                     "access_error_title": "Access error",
@@ -112,17 +115,21 @@ pub fn app() -> Html
                     "remove_participant_button": "Remove",
                     "confirm_remove_participant": "Are you sure you want to remove {name} from the project?",
                     "add_participant_label": "Add a participant (login)",
-                    "add_participant_placeholder": "jdoe12345",
+                    "add_participant_placeholder": "situ62394",
                     "add_participant_button": "Add",
-                    "add_participant_button_loading": "Adding..."
+                    "add_participant_button_loading": "Adding...",
+                    "card_title_env_vars": "Manage Environment Variables",
+                    "env_vars_description": "Changes will trigger a project restart to take effect. Values are encrypted at rest.",
+                    "env_vars_updated_success": "Environment variables updated successfully. The project is restarting.",
+                    "save_and_restart_button": "Save & Restart",
+                    "save_and_restart_button_loading": "Saving...",
+                    "persistent_volume_label": "Persistent Volume",
+                    "env_vars_label": "Environment Variables"
                 },
                 "admin": {
                     "title": "Admin dashboard",
-                    "description": "This area is under construction.",
                     "all_projects_title": "All projects",
-                    "all_projects_placeholder": "[Placeholder for a table of all running projects]",
-                    "global_metrics_title": "Global metrics",
-                    "global_metrics_placeholder": "[Placeholder for global platform metrics]"
+                    "global_metrics_title": "Global metrics"
                 },
                 "errors": {
                     "PROJECT_NAME_TAKEN": "This project name is already taken.",
@@ -207,7 +214,11 @@ pub fn app() -> Html
                     "submit_button_loading": "Déploiement en cours...",
                     "link_github_prompt": "Pour déployer depuis GitHub, vous devez d'abord installer l'application GitHub Hangar sur votre compte ou organisation.",
                     "link_github_button": "Installer l'application GitHub",
-                    "github_connected_success": "Application GitHub connectée avec succès ! Vous pouvez maintenant réessayer de déployer votre projet."
+                    "github_connected_success": "Application GitHub connectée avec succès ! Vous pouvez maintenant réessayer de déployer votre projet.",
+                    "volume_path_label": "Chemin du volume persistant (facultatif)",
+                    "volume_path_help": "Chemin à l'intérieur du conteneur à persister.",
+                    "env_vars_label": "Variables d'environnement (facultatif)",
+                    "env_vars_help": "Une variable par ligne, au format KEY=VALUE."
                 },
                 "project_dashboard": {
                     "title": "Tableau de bord du projet",
@@ -218,7 +229,6 @@ pub fn app() -> Html
                     "card_title_metrics": "Métriques (en %)",
                     "card_title_danger": "Zone de danger",
                     "logs_placeholder": "Cliquez sur 'Récupérer les logs' pour afficher les logs du conteneur",
-                    "metrics_placeholder": "[Espace réservé pour l'utilisation CPU/RAM]",
                     "delete_button": "Supprimer le projet",
                     "confirm_delete": "Êtes-vous sûr de vouloir supprimer définitivement le projet '{name}' ? Cette action est irréversible.",
                     "access_error_title": "Erreur d'accès",
@@ -240,17 +250,21 @@ pub fn app() -> Html
                     "remove_participant_button": "Retirer",
                     "confirm_remove_participant": "Êtes-vous sûr de vouloir retirer {name} du projet ?",
                     "add_participant_label": "Ajouter un participant (login)",
-                    "add_participant_placeholder": "situ12345",
+                    "add_participant_placeholder": "situ62394",
                     "add_participant_button": "Ajouter",
-                    "add_participant_button_loading": "Ajout en cours..."
+                    "add_participant_button_loading": "Ajout en cours...",
+                    "card_title_env_vars": "Gérer les Variables d'Environnement",
+                    "env_vars_description": "Les changements entraîneront un redémarrage du projet pour être pris en compte. Les valeurs sont chiffrées au repos.",
+                    "env_vars_updated_success": "Variables d'environnement mises à jour. Le projet est en cours de redémarrage.",
+                    "save_and_restart_button": "Sauvegarder & Redémarrer",
+                    "save_and_restart_button_loading": "Sauvegarde...",
+                    "persistent_volume_label": "Volume Persistant",
+                    "env_vars_label": "Variables d'Environnement"
                 },
                 "admin": {
                     "title": "Tableau de bord admin",
-                    "description": "Cette section est en construction.",
                     "all_projects_title": "Tous les projets",
-                    "all_projects_placeholder": "[Espace réservé pour une table de tous les projets en cours]",
-                    "global_metrics_title": "Métriques globales",
-                    "global_metrics_placeholder": "[Espace réservé pour les métriques globales de la plateforme]"
+                    "global_metrics_title": "Métriques globales"
                 },
                 "errors": {
                     "PROJECT_NAME_TAKEN": "Ce nom de projet est déjà utilisé.",

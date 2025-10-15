@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -10,7 +11,7 @@ use crate::
 {
     components::gauge::Gauge,
     contexts::user_context::use_user,
-    models::project::{ProjectDetails, ProjectMetrics, ProjectSourceType},
+    models::project::{ProjectDetails, ProjectMetrics, ProjectSourceType, UpdateEnvPayload},
     router::AppRoute,
     services::project_service::{self, ApiError},
 };
@@ -52,6 +53,14 @@ struct UpdateImageFormProps
 {
     project_id: i32,
     project_name: String,
+}
+
+#[derive(Properties, PartialEq)]
+struct EnvManagerProps
+{
+    project_id: i32,
+    current_env_vars: Option<HashMap<String, String>>,
+    on_update: Callback<()>,
 }
 
 #[derive(Properties, PartialEq)]
@@ -514,7 +523,7 @@ fn update_image_form(props: &UpdateImageFormProps) -> Html
                         type="text"
                         id="new_image_url"
                         class="text-input"
-                        placeholder="mon-registre/mon-image:2.0"
+                        placeholder="my-registry/my-image:2.0"
                         value={(*new_image_url).clone()}
                         onchange={on_input_change}
                         required=true
@@ -542,6 +551,109 @@ fn update_image_form(props: &UpdateImageFormProps) -> Html
         </div>
     }
 }
+
+#[function_component(EnvManager)]
+fn env_manager(props: &EnvManagerProps) -> Html
+{
+    let (i18n, _) = use_translation();
+    
+    let initial_vars_str = props.current_env_vars.as_ref().map_or_else(String::new, |vars| 
+    {
+        vars.iter().map(|(k, v)| format!("{}={}", k, v)).collect::<Vec<_>>().join("\n")
+    });
+    let env_vars_str = use_state(|| initial_vars_str);
+
+    let is_loading = use_state(|| false);
+    let error = use_state(|| None::<ApiError>);
+    let success = use_state(|| false);
+
+    let on_change = 
+    {
+        let env_vars_str = env_vars_str.clone();
+        let success = success.clone();
+        Callback::from(move |e: Event| 
+        {
+            let value = e.target_unchecked_into::<web_sys::HtmlTextAreaElement>().value();
+            env_vars_str.set(value);
+            success.set(false); // Reset success message on edit
+        })
+    };
+
+    let on_submit = 
+    {
+        let env_vars_str = env_vars_str.clone();
+        let is_loading = is_loading.clone();
+        let error = error.clone();
+        let success = success.clone();
+        let on_update = props.on_update.clone();
+        let project_id = props.project_id;
+
+        Callback::from(move |e: SubmitEvent| 
+        {
+            e.prevent_default();
+            is_loading.set(true);
+            error.set(None);
+            success.set(false);
+
+            let env_vars: HashMap<String, String> = (*env_vars_str)
+                .lines()
+                .filter_map(|line| line.trim().split_once('='))
+                .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
+                .filter(|(k, _)| !k.is_empty())
+                .collect();
+            
+            let payload = UpdateEnvPayload { env_vars };
+            let is_loading = is_loading.clone();
+            let error = error.clone();
+            let success = success.clone();
+            let on_update = on_update.clone();
+
+            wasm_bindgen_futures::spawn_local(async move {
+                match project_service::update_env_vars(project_id, &payload).await {
+                    Ok(_) => {
+                        success.set(true);
+                        on_update.emit(()); 
+                    }
+                    Err(e) => error.set(Some(e)),
+                }
+                is_loading.set(false);
+            });
+        })
+    };
+
+    html! {
+        <div class="card" style="margin-top: var(--spacing-lg);">
+            <h2>{ i18n.t("project_dashboard.card_title_env_vars") }</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-md);">
+                { i18n.t("project_dashboard.env_vars_description") }
+            </p>
+            <form onsubmit={on_submit}>
+                <div class="form-group">
+                    <textarea class="text-input"
+                           value={(*env_vars_str).clone()}
+                           onchange={on_change}
+                           rows="8"
+                           placeholder="KEY=VALUE">
+                    </textarea>
+                </div>
+                
+                if *success {
+                    <p class="success-banner" style="margin-bottom: var(--spacing-md); background-color: rgba(126, 211, 33, 0.2); border-color: #7ED321;">
+                        { i18n.t("project_dashboard.env_vars_updated_success") }
+                    </p>
+                }
+                if let Some(err) = &*error {
+                    <p class="error">{ translate_error(err, &i18n) }</p>
+                }
+
+                <button type="submit" class="button-primary" disabled={*is_loading}>
+                    { if *is_loading { i18n.t("project_dashboard.save_and_restart_button_loading") } else { i18n.t("project_dashboard.save_and_restart_button") } }
+                </button>
+            </form>
+        </div>
+    }
+}
+
 
 #[function_component(ProjectDashboard)]
 pub fn project_dashboard(props: &ProjectDashboardProps) -> Html 
@@ -578,7 +690,7 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
         });
     }
 
-    let on_participants_update = 
+    let on_update = 
     {
         let trigger_reload = trigger_reload.clone();
         Callback::from(move |_| 
@@ -614,7 +726,7 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
 
     // Project loaded - render dashboard
     let p = &details.project;
-    let is_owner = user_context.user.as_ref().map_or(false, |u| u.login == p.owner);
+    let has_control_access = user_context.user.as_ref().map_or(false, |u| u.is_admin || u.login == p.owner);
 
     let created_at_formatted = p.created_at
         .split('T')
@@ -769,9 +881,14 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
                  <p style="word-break: break-all;">
                     { format!("{}: {}", i18n.t("common.deployed_image"), p.deployed_image_tag) }
                 </p>
+
+                if let Some(path) = &p.persistent_volume_path
+                {
+                    <p>{ format!("{}: {}", i18n.t("project_dashboard.persistent_volume_label"), path) }</p>
+                }
             </div>
 
-            if is_owner
+            if has_control_access
             {
                 <div class="card" style="margin-top: var(--spacing-lg);">
                     <h2>{ i18n.t("project_dashboard.card_title_controls") }</h2>
@@ -851,21 +968,27 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html
                 <ProjectMetricsDisplay project_id={p.id} />
             </div>
 
-            if is_owner
+            if has_control_access
             {
                 <ParticipantManager
                     project_id={p.id}
                     participants={details.participants.clone()}
-                    on_update={on_participants_update}
+                    on_update={on_update.clone()}
+                />
+
+                <EnvManager 
+                    project_id={p.id}
+                    current_env_vars={p.env_vars.clone()}
+                    on_update={on_update.clone()}
                 />
             }
 
-            if is_owner && p.source == ProjectSourceType::Direct
+            if has_control_access && p.source == ProjectSourceType::Direct
             {
                 <UpdateImageForm project_id={p.id} project_name={p.name.clone()} />
             }
 
-            if is_owner
+            if has_control_access
             {
                 <div class="card" style="margin-top: var(--spacing-lg); border-color: var(--color-danger);">
                     <h2>{ i18n.t("project_dashboard.card_title_danger") }</h2>
