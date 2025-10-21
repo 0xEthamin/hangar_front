@@ -1,8 +1,8 @@
 use crate::
 {
-    components::nav::Nav,
+    components::{footer::Footer, nav::Nav},
     contexts::user_context::UserProvider,
-    router::{AppRoute, switch},
+    router::{switch, AppRoute},
 };
 use i18nrs::yew::{I18nProvider, I18nProviderConfig};
 use std::collections::HashMap;
@@ -45,6 +45,114 @@ pub fn app() -> Html
                     "admin": "Admin",
                     "logout": "Logout"
                 },
+                "footer": {
+                    "about": "About",
+                    "terms": "Terms of Use",
+                    "contact": "Contact"
+                },
+                "about": {
+                    "title": "About Hangar",
+                    "hero_subtitle": "Garage Isep's deployment platform",
+                    "what_is_title": "What is Hangar?",
+                    "what_is_p1": "Hangar is an application deployment platform developed by Garage Isep. It allows ISEP students to easily deploy and manage their web applications without worrying about technical infrastructure.",
+                    "what_is_p2": "Whether you want to host your Web APP project, your final year project, or something else, Hangar provides all the necessary tools in just a few clicks.",
+                    
+                    "features_title": "Main Features",
+                    "feature_deploy_title": "Simplified Deployment",
+                    "feature_deploy_desc": "Connect your GitHub repository or use a Docker image. Hangar takes care of the rest: build, security scan, and automatic deployment.",
+                    "feature_database_title": "MariaDB Databases",
+                    "feature_database_desc": "Create and manage your databases in one click.",
+                    "feature_monitoring_title": "Real-time Monitoring",
+                    "feature_monitoring_desc": "Monitor the state of your applications, check logs, and view resource usage (CPU, RAM) through intuitive dashboards.",
+                    "feature_collab_title": "Collaboration",
+                    "feature_collab_desc": "Add participants to your projects to work as a team.",
+                    "feature_security_title": "Security",
+                    "feature_security_desc": "Automatic vulnerability scanning, secret encryption, container isolation, and automatic HTTPS with Let's Encrypt.",
+                    "feature_updates_title": "Zero-downtime Updates",
+                    "feature_updates_desc": "Deploy new versions without service interruption thanks to the blue-green deployment system.",
+                    
+                    "tech_title": "Technologies Used",
+                    "tech_intro": "Hangar is fully built in Rust to ensure performance, security, and reliability:",
+                    "tech_frontend": "Frontend: Yew (WebAssembly)",
+                    "tech_backend": "Backend: Axum (REST API)",
+                    "tech_container": "Containerization: Docker + Traefik",
+                    "tech_db": "Databases: PostgreSQL + MariaDB",
+                    
+                    "team_title": "The Team",
+                    "team_p1": "Hangar is developed by Simon TULOUP and maintained by Garage Isep's IT team.",
+                    "team_p2": "This project is new. If you have any feedback, feel free to contact us!",
+                    
+                    "mission_title": "Our Mission",
+                    "mission_p1": "Make application deployment accessible to all students, regardless of their technical level.",
+                    "mission_p2": "Provide a robust, modern, and secure infrastructure to help you."
+                },
+                "terms": {
+                    "title": "Terms of Use",
+                    "last_updated": "Last updated: October 2025",
+                    "intro": "By using Hangar, you agree to the following terms. Please read them carefully.",
+                    
+                    "h2_1": "1. Acceptance of Terms",
+                    "p1_1": "By accessing Hangar and deploying applications, you agree to be bound by these terms of use. If you do not accept them, you must not use the platform.",
+                    "p1_2": "These terms may be modified at any time. Changes take effect immediately upon publication on this page.",
+                    
+                    "h2_2": "2. Eligibility",
+                    "p2_1": "Hangar is exclusively reserved for Isep students.",
+                    "p2_2": "You must have valid Isep credentials to access the platform.",
+                    
+                    "h2_3": "3. User Responsibility",
+                    "p3_1": "You are solely responsible for the content you deploy on Hangar. You agree to:",
+                    "p3_list_1": "Not host illegal, defamatory, hateful content, or content infringing the rights of others",
+                    "p3_list_2": "Not deploy malicious code, viruses, or any harmful elements",
+                    "p3_list_3": "Not use the platform for commercial activities without authorization",
+                    "p3_list_4": "Respect intellectual property rights (software licenses, copyrights)",
+                    "p3_list_5": "Not compromise the security or stability of the platform",
+                    "p3_2": "Garage Isep reserves the right to remove without notice any project that violates these rules and to suspend or ban the concerned user account.",
+                    
+                    "h2_4": "4. Resource Limitations",
+                    "p4_1": "To ensure fair service quality for everyone, each user is subject to the following limits:",
+                    "p4_list_1": "Maximum 1 project per user",
+                    "p4_list_2": "Maximum 1 database per user",
+                    "p4_list_3": "512 MB RAM per container",
+                    "p4_list_4": "50% of one CPU core per container",
+                    "p4_list_5": "Reasonable storage for persistent volumes",
+                    "p4_2": "Any abuse or excessive resource use (cryptocurrency mining, brute force attacks, etc.) may result in immediate suspension of the project without notice.",
+                    
+                    "h2_5": "5. Service Availability",
+                    "p5_1": "Garage Isep strives to keep Hangar available 24/7 but cannot guarantee 100% uptime.",
+                    "p5_2": "Scheduled maintenance may cause temporary interruptions. We strive to announce them in advance.",
+                    "p5_3": "Garage Isep cannot be held responsible for data loss, service interruptions, or any damage resulting from the use of Hangar.",
+                    
+                    "h2_6": "6. Data Backup",
+                    "p6_1": "Although we perform regular infrastructure backups, you are responsible for backing up your own data (code, database, files).",
+                    "p6_2": "Garage Isep cannot be held responsible for any data loss resulting from error, technical failure, or project deletion.",
+                    
+                    "h2_7": "7. Privacy and Security",
+                    "p7_1": "Your login credentials are managed via Isep’s CAS system. We do not store your passwords.",
+                    "p7_2": "Environment variables and database passwords are encrypted in the database (AES-256-GCM).",
+                    "p7_3": "Access logs are retained for security and debugging purposes.",
+                    "p7_4": "You are responsible for the security of your deployed applications. Hangar provides tools (vulnerability scans, isolation) but cannot guarantee the security of your code.",
+                    
+                    "h2_8": "8. Intellectual Property",
+                    "p8_1": "You retain all rights to the code and content you deploy on Hangar.",
+                    "p8_2": "By using Hangar, you grant Garage Isep a non-exclusive license to host, run, and distribute your content as part of the service.",
+                    "p8_3": "Hangar’s source code is open-source and available under the appropriate license.",
+                    
+                    "h2_9": "9. Termination",
+                    "p9_1": "You can delete your project at any time from the user interface.",
+                    "p9_2": "Garage Isep reserves the right to suspend or delete any project in case of a breach of these terms.",
+                    "p9_3": "Upon graduation or leaving Isep, your account may be deactivated after a grace period.",
+                    
+                    "h2_10": "10. Contact and Support",
+                    "p10_1": "For any questions about these terms of use, contact us at dsi@garageisep.com",
+                    "p10_2": "Technical support is provided as much as possible, without any guarantee of response time.",
+                    
+                    "acceptance": "By using Hangar, you confirm that you have read, understood, and accepted these terms of use."
+                },
+                "contact": {
+                    "title": "Contact",
+                    "p1": "If you have any questions, encounter a problem, or have suggestions for improvement, please do not hesitate to contact the Garage Isep team.",
+                    "p2_prefix": "You can reach us by email at: "
+                },
                 "auth": {
                     "logging_in": "Connecting, please wait...",
                     "login_failed": "Authentication failed. Please try again.",
@@ -53,10 +161,10 @@ pub fn app() -> Html
                 "dashboard": {
                     "welcome": "Welcome, {name}!",
                     "description": "Your application deployment center.",
-                    "create_project_button": "New project",
-                    "owned_projects_title": "My projects",
+                    "create_project_button": "New project or database",
+                    "owned_projects_title": "My Projects & Databases",
                     "participating_projects_title": "My participations",
-                    "empty_state_owned": "You don't own any projects yet.",
+                    "empty_state_owned": "You don't own any projects or databases yet.",
                     "empty_state_participating": "You are not participating in any projects."
                 },
                 "create_project": {
@@ -83,19 +191,30 @@ pub fn app() -> Html
                     "volume_path_label": "Persistent Volume Path (Optional)",
                     "volume_path_help": "Path inside the container to persist.",
                     "env_vars_label": "Environment Variables (Optional)",
-                    "env_vars_help": "One variable per line, in KEY=VALUE format."
+                    "env_vars_help": "One variable per line, in KEY=VALUE format.",
+                    "database_tab": "Database Only",
+                    "description_database": "Create a standalone MariaDB database, without linking it to a project.",
+                    "create_db_checkbox": "Also create and link a new database",
+                    "github_branch_help": "Leave empty to use the default branch.",
+                    "github_root_dir_help": "The subdirectory containing your main file. Leave empty if the code is at the root."
                 },
                 "project_dashboard": {
                     "title": "Project dashboard",
-                    "card_title_update_image": "Update image",
+                    "visit_app_button": "Visit App",
                     "card_title_info": "Project info",
                     "card_title_controls": "Controls",
                     "card_title_logs": "Logs",
                     "card_title_metrics": "Metrics (in %)",
                     "card_title_danger": "Danger zone",
+                    "card_title_update_image": "Update image",
+                    "card_title_rebuild": "Rebuild from GitHub",
+                    "card_title_env_vars": "Manage Environment Variables",
                     "logs_placeholder": "Click 'Fetch logs' to display container logs",
+                    "logs_empty": "No log output. The container might not be logging to stdout/stderr, or it's just quiet.",
+                    "logs_error": "Error fetching logs: {error}",
                     "delete_button": "Delete project",
                     "confirm_delete": "Are you sure you want to permanently delete the project '{name}'? This action is irreversible.",
+                    "confirm_delete_db_warning": "The linked database will also be permanently deleted.",
                     "access_error_title": "Access error",
                     "load_error_message": "Could not load project: {error}",
                     "start_button": "Start",
@@ -103,12 +222,14 @@ pub fn app() -> Html
                     "restart_button": "Restart",
                     "fetch_logs_button": "Fetch logs",
                     "fetch_logs_loading": "Loading...",
-                    "logs_empty": "No log output. The container might not be logging to stdout/stderr, or it's just quiet.",
-                    "logs_error": "Error fetching logs: {error}",
-                    "update_image_description": "Deploy a new version of your application by providing a new Docker image URL. This will cause a short service interruption.",
-                    "confirm_update_image": "Are you sure? Updating the image for '{name}' will cause a brief service interruption.",
+                    "update_image_description": "Deploy a new version of your application by providing a new Docker image URL.",
+                    "confirm_update_image": "Are you sure? Updating the image for '{name}' will take a few moments.",
                     "update_image_button": "Update image",
                     "update_image_button_loading": "Updating...",
+                    "rebuild_description": "Rebuild your project from the latest GitHub repository code. This will pull the latest changes and redeploy your application.",
+                    "confirm_rebuild": "Are you sure you want to rebuild the project '{name}'? This may take a few moments.",
+                    "rebuild_button": "Rebuild from GitHub",
+                    "rebuild_button_loading": "Rebuilding...",
                     "participants_list_label": "Participants:",
                     "manage_participants_title": "Manage participants",
                     "no_participants": "This project has no participants.",
@@ -118,13 +239,33 @@ pub fn app() -> Html
                     "add_participant_placeholder": "situ62394",
                     "add_participant_button": "Add",
                     "add_participant_button_loading": "Adding...",
-                    "card_title_env_vars": "Manage Environment Variables",
                     "env_vars_description": "Changes will trigger a project restart to take effect. Values are encrypted at rest.",
                     "env_vars_updated_success": "Environment variables updated successfully. The project is restarting.",
                     "save_and_restart_button": "Save & Restart",
                     "save_and_restart_button_loading": "Saving...",
-                    "persistent_volume_label": "Persistent Volume",
-                    "env_vars_label": "Environment Variables"
+                    "persistent_volume_label": "Persistent Volume"
+                },
+                "database": {
+                    "title": "Database",
+                    "create_button": "Create Database",
+                    "dashboard_title": "Database Dashboard",
+                    "connection_info_title": "Connection Information",
+                    "host": "Host",
+                    "port": "Port",
+                    "db_name": "Database Name",
+                    "username": "Username",
+                    "password": "Password",
+                    "link_to_project_title": "Link to a Project",
+                    "no_projects_to_link": "You have no projects available to link this database to.",
+                    "select_project": "Select a project...",
+                    "link_button": "Link to Project",
+                    "unlink_button": "Unlink from Project",
+                    "delete_button": "Delete Database",
+                    "confirm_delete": "Are you sure you want to permanently delete this database? This action is irreversible.",
+                    "no_db_linked": "No database is linked to this project.",
+                    "unlinked_db_found": "You have an existing unlinked database ('{name}').",
+                    "link_this_db_button": "Link this database",
+                    "create_and_link_button": "Create & Link a New Database"
                 },
                 "admin": {
                     "title": "Admin dashboard",
@@ -145,7 +286,10 @@ pub fn app() -> Html
                     "GITHUB_ACCOUNT_NOT_LINKED": "Your GitHub account is not linked. You must link it to deploy from a repository.",
                     "GITHUB_REPO_NOT_ACCESSIBLE": "The Hangar App does not have access to this repository. Please update your installation permissions. Then try again.",
                     "GITHUB_PACKAGE_NOT_PUBLIC": "Direct deployment from ghcr.io failed. Please ensure your package is set to 'Public'.",
-                    "DEFAULT": "An unexpected error occurred. Please contact an administrator."
+                    "DEFAULT": "An unexpected error occurred. Please contact an administrator.",
+                    "DATABASE_ALREADY_EXISTS": "You already own a database. Only one is allowed per user.",
+                    "LINK_FAILED": "Failed to link the database to the project.",
+                    "NOT_FOUND": "The requested resource was not found."
                 }
             }"#,
         ),
@@ -180,6 +324,114 @@ pub fn app() -> Html
                     "admin": "Admin",
                     "logout": "Déconnexion"
                 },
+                 "footer": {
+                    "about": "À propos",
+                    "terms": "Conditions d'utilisation",
+                    "contact": "Contact"
+                },
+                "about": {
+                    "title": "À propos de Hangar",
+                    "hero_subtitle": "La plateforme de déploiement de Garage Isep",
+                    "what_is_title": "Qu'est-ce que Hangar ?",
+                    "what_is_p1": "Hangar est une plateforme de déploiement d'applications développée par Garage Isep. Elle permet aux étudiants de l'ISEP de déployer et gérer facilement leurs applications web sans se soucier de l'infrastructure technique.",
+                    "what_is_p2": "Que vous souhaitiez héberger votre projet d'APP Web, votre projet de fin d'année ou autre chose, Hangar vous offre tous les outils nécessaires en quelques clics.",
+                    
+                    "features_title": "Fonctionnalités principales",
+                    "feature_deploy_title": "Déploiement simplifié",
+                    "feature_deploy_desc": "Connectez votre dépôt GitHub ou utilisez une image Docker. Hangar s'occupe du reste : build, scan de sécurité, déploiement automatique.",
+                    "feature_database_title": "Bases de données MariaDB",
+                    "feature_database_desc": "Créez et gérez vos bases de données en un clic.",
+                    "feature_monitoring_title": "Monitoring temps réel",
+                    "feature_monitoring_desc": "Suivez l'état de vos applications, consultez les logs et surveillez l'utilisation des ressources (CPU, RAM) via des tableaux de bord intuitifs.",
+                    "feature_collab_title": "Collaboration",
+                    "feature_collab_desc": "Ajoutez des participants à vos projets pour travailler en équipe.",
+                    "feature_security_title": "Sécurité",
+                    "feature_security_desc": "Scan automatique des vulnérabilités, chiffrement des secrets, isolation des conteneurs, HTTPS automatique avec Let's Encrypt.",
+                    "feature_updates_title": "Mises à jour zero-downtime",
+                    "feature_updates_desc": "Déployez de nouvelles versions sans interruption de service grâce au système de déploiement blue-green.",
+                    
+                    "tech_title": "Technologies utilisées",
+                    "tech_intro": "Hangar est entièrement développé en Rust pour garantir performance, sécurité et fiabilité :",
+                    "tech_frontend": "Frontend : Yew (WebAssembly)",
+                    "tech_backend": "Backend : Axum (API REST)",
+                    "tech_container": "Conteneurisation : Docker + Traefik",
+                    "tech_db": "Bases de données : PostgreSQL + MariaDB",
+                    
+                    "team_title": "L'équipe",
+                    "team_p1": "Hangar est développé par Simon TULOUP et maintenu par l'équipe DSI de Garage Isep.",
+                    "team_p2": "Ce projet est nouveau. Si vous avez des retours à nous faire, n'hésitez pas à nous contacter !",
+                    
+                    "mission_title": "Notre mission",
+                    "mission_p1": "Rendre le déploiement d'applications accessible à tous les étudiants, quel que soit leur niveau technique.",
+                    "mission_p2": "Fournir une infrastructure robuste, moderne et sécurisée pour vous aider"
+                },
+                "terms": {
+                    "title": "Conditions d'Utilisation",
+                    "last_updated": "Dernière mise à jour : Octobre 2025",
+                    "intro": "En utilisant Hangar, vous acceptez les conditions suivantes. Veuillez les lire attentivement.",
+                    
+                    "h2_1": "1. Acceptation des conditions",
+                    "p1_1": "En accédant à Hangar et en déployant des applications, vous acceptez d'être lié par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser la plateforme.",
+                    "p1_2": "Ces conditions peuvent être modifiées à tout moment. Les modifications prendront effet immédiatement après leur publication sur cette page.",
+                    
+                    "h2_2": "2. Éligibilité",
+                    "p2_1": "Hangar est réservé exclusivement aux étudiants de l'Isep.",
+                    "p2_2": "Vous devez disposer d'identifiants Isep valides pour accéder à la plateforme.",
+                    
+                    "h2_3": "3. Responsabilité de l'utilisateur",
+                    "p3_1": "Vous êtes seul responsable du contenu que vous déployez sur Hangar. Vous vous engagez à :",
+                    "p3_list_1": "Ne pas héberger de contenu illégal, diffamatoire, haineux ou portant atteinte aux droits d'autrui",
+                    "p3_list_2": "Ne pas déployer de code malveillant, de virus, ou de tout élément nuisible",
+                    "p3_list_3": "Ne pas utiliser la plateforme pour des activités commerciales sans autorisation",
+                    "p3_list_4": "Respecter les droits de propriété intellectuelle (licences logicielles, droits d'auteur)",
+                    "p3_list_5": "Ne pas compromettre la sécurité ou la stabilité de la plateforme",
+                    "p3_2": "Garage Isep se réserve le droit de supprimer sans préavis tout projet ne respectant pas ces règles, et de suspendre ou bannir le compte utilisateur concerné.",
+                    
+                    "h2_4": "4. Limitation des ressources",
+                    "p4_1": "Pour garantir une qualité de service équitable pour tous, chaque utilisateur est soumis aux limitations suivantes :",
+                    "p4_list_1": "1 projet maximum par utilisateur",
+                    "p4_list_2": "1 base de données maximum par utilisateur",
+                    "p4_list_3": "512 MB de RAM par conteneur",
+                    "p4_list_4": "50% d'un cœur CPU par conteneur",
+                    "p4_list_5": "Stockage raisonnable pour les volumes persistants",
+                    "p4_2": "Tout abus ou utilisation excessive des ressources (minage de cryptomonnaies, attaques par force brute, etc.) peut entraîner la suspension immédiate du projet sans préavis.",
+                    
+                    "h2_5": "5. Disponibilité du service",
+                    "p5_1": "Garage Isep s'efforce de maintenir Hangar disponible 24h/24 et 7j/7, mais ne peut garantir une disponibilité à 100%.",
+                    "p5_2": "Des maintenances programmées peuvent entraîner des interruptions temporaires. Nous nous efforçons de les annoncer à l'avance.",
+                    "p5_3": "Garage Isep ne peut être tenu responsable des pertes de données, interruptions de service ou tout dommage résultant de l'utilisation de Hangar.",
+                    
+                    "h2_6": "6. Sauvegarde des données",
+                    "p6_1": "Bien que nous effectuions des sauvegardes régulières de l'infrastructure, vous êtes responsable de la sauvegarde de vos propres données (code, base de données, fichiers).",
+                    "p6_2": "Garage Isep ne peut être tenu responsable de la perte de données résultant d'une erreur, d'une défaillance technique ou de la suppression d'un projet.",
+                    
+                    "h2_7": "7. Confidentialité et sécurité",
+                    "p7_1": "Vos identifiants de connexion sont gérés via le système CAS de l'Isep. Nous ne stockons pas vos mots de passe.",
+                    "p7_2": "Les variables d'environnement et mots de passe de bases de données sont chiffrés en base de données (AES-256-GCM).",
+                    "p7_3": "Les logs d'accès sont conservés pour des raisons de sécurité et de débogage.",
+                    "p7_4": "Vous êtes responsable de la sécurité de vos applications déployées. Hangar fournit des outils (scan de vulnérabilités, isolation), mais ne peut garantir la sécurité de votre code.",
+                    
+                    "h2_8": "8. Propriété intellectuelle",
+                    "p8_1": "Vous conservez tous les droits sur le code et le contenu que vous déployez sur Hangar.",
+                    "p8_2": "En utilisant Hangar, vous accordez à Garage Isep une licence non-exclusive pour héberger, exécuter et distribuer votre contenu dans le cadre du service.",
+                    "p8_3": "Le code source de Hangar est open-source et disponible sous licence appropriée.",
+                    
+                    "h2_9": "9. Résiliation",
+                    "p9_1": "Vous pouvez supprimer votre projet à tout moment depuis l'interface utilisateur.",
+                    "p9_2": "Garage Isep se réserve le droit de suspendre ou supprimer tout projet en cas de violation de ces conditions.",
+                    "p9_3": "En cas de fin d'études ou de départ de l'Isep, votre compte pourra être désactivé après un délai de grâce.",
+                    
+                    "h2_10": "10. Contact et support",
+                    "p10_1": "Pour toute question concernant ces conditions d'utilisation, contactez-nous à dsi@garageisep.com",
+                    "p10_2": "Le support technique est fourni dans la mesure du possible, sans garantie de délai de réponse.",
+                    
+                    "acceptance": "En utilisant Hangar, vous confirmez avoir lu, compris et accepté ces conditions d'utilisation."
+                },
+                "contact": {
+                    "title": "Contact",
+                    "p1": "Pour toute question, problème ou suggestion d'amélioration, n'hésitez pas à contacter l'équipe de Garage Isep.",
+                    "p2_prefix": "Vous pouvez nous joindre par email à l'adresse : "
+                },
                 "auth": {
                     "logging_in": "Connexion en cours, veuillez patienter...",
                     "login_failed": "L'authentification a échoué. Veuillez réessayer.",
@@ -188,10 +440,10 @@ pub fn app() -> Html
                 "dashboard": {
                     "welcome": "Bienvenue, {name} !",
                     "description": "Votre centre de déploiement d'applications.",
-                    "create_project_button": "Nouveau projet",
-                    "owned_projects_title": "Mes projets",
+                    "create_project_button": "Nouveau projet ou BDD",
+                    "owned_projects_title": "Mes Projets & Bases de Données",
                     "participating_projects_title": "Mes participations",
-                    "empty_state_owned": "Vous n'avez encore aucun projet.",
+                    "empty_state_owned": "Vous n'avez encore aucun projet ni base de données.",
                     "empty_state_participating": "Vous ne participez à aucun projet."
                 },
                 "create_project": {
@@ -218,19 +470,30 @@ pub fn app() -> Html
                     "volume_path_label": "Chemin du volume persistant (facultatif)",
                     "volume_path_help": "Chemin à l'intérieur du conteneur à persister.",
                     "env_vars_label": "Variables d'environnement (facultatif)",
-                    "env_vars_help": "Une variable par ligne, au format KEY=VALUE."
+                    "env_vars_help": "Une variable par ligne, au format KEY=VALUE.",
+                    "database_tab": "Base de données seule",
+                    "description_database": "Créez une base de données MariaDB autonome, sans la lier à un projet.",
+                    "create_db_checkbox": "Créer et lier également une nouvelle base de données",
+                    "github_branch_help": "Laissez vide pour utiliser la branche par défaut.",
+                    "github_root_dir_help": "Le sous-dossier contenant votre fichier principal. Laissez vide si le code est à la racine."
                 },
                 "project_dashboard": {
                     "title": "Tableau de bord du projet",
-                    "card_title_update_image": "Mettre à jour l'image",
+                    "visit_app_button": "Visiter l'application",
                     "card_title_info": "Informations du projet",
                     "card_title_controls": "Contrôles",
                     "card_title_logs": "Logs",
                     "card_title_metrics": "Métriques (en %)",
                     "card_title_danger": "Zone de danger",
+                    "card_title_update_image": "Mettre à jour l'image",
+                    "card_title_rebuild": "Reconstruire depuis GitHub",
+                    "card_title_env_vars": "Gérer les Variables d'Environnement",
                     "logs_placeholder": "Cliquez sur 'Récupérer les logs' pour afficher les logs du conteneur",
+                    "logs_empty": "Aucune sortie de log. Le conteneur n'écrit peut-être rien sur stdout/stderr, ou il est simplement silencieux.",
+                    "logs_error": "Erreur lors de la récupération des logs : {error}",
                     "delete_button": "Supprimer le projet",
                     "confirm_delete": "Êtes-vous sûr de vouloir supprimer définitivement le projet '{name}' ? Cette action est irréversible.",
+                    "confirm_delete_db_warning": "La base de données liée sera également supprimée définitiveement.",
                     "access_error_title": "Erreur d'accès",
                     "load_error_message": "Impossible de charger le projet : {error}",
                     "start_button": "Démarrer",
@@ -238,12 +501,14 @@ pub fn app() -> Html
                     "restart_button": "Redémarrer",
                     "fetch_logs_button": "Récupérer les logs",
                     "fetch_logs_loading": "Chargement...",
-                    "logs_empty": "Aucune sortie de log. Le conteneur n'écrit peut-être rien sur stdout/stderr, ou il est simplement silencieux.",
-                    "logs_error": "Erreur lors de la récupération des logs : {error}",
-                    "update_image_description": "Déployez une nouvelle version de votre application en fournissant une nouvelle URL d'image Docker. Cela entraînera une courte interruption de service.",
-                    "confirm_update_image": "Êtes-vous sûr ? La mise à jour de l'image pour '{name}' entraînera une brève interruption de service.",
+                    "update_image_description": "Déployez une nouvelle version de votre application en fournissant une nouvelle URL d'image Docker.",
+                    "confirm_update_image": "Êtes-vous sûr ? La mise à jour de l'image pour '{name}' prendra quelques instants.",
                     "update_image_button": "Mettre à jour l'image",
                     "update_image_button_loading": "Mise à jour...",
+                    "rebuild_description": "Reconstruisez votre projet à partir du dernier code du dépôt GitHub. Cela récupérera les dernières modifications et redéployera votre application.",
+                    "confirm_rebuild": "Êtes-vous sûr de vouloir reconstruire le projet '{name}' ? Cela peut prendre quelques instants.",
+                    "rebuild_button": "Reconstruire depuis GitHub",
+                    "rebuild_button_loading": "Reconstruction en cours...",
                     "participants_list_label": "Participants :",
                     "manage_participants_title": "Gérer les participants",
                     "no_participants": "Ce projet n'a aucun participant.",
@@ -253,13 +518,33 @@ pub fn app() -> Html
                     "add_participant_placeholder": "situ62394",
                     "add_participant_button": "Ajouter",
                     "add_participant_button_loading": "Ajout en cours...",
-                    "card_title_env_vars": "Gérer les Variables d'Environnement",
                     "env_vars_description": "Les changements entraîneront un redémarrage du projet pour être pris en compte. Les valeurs sont chiffrées au repos.",
                     "env_vars_updated_success": "Variables d'environnement mises à jour. Le projet est en cours de redémarrage.",
                     "save_and_restart_button": "Sauvegarder & Redémarrer",
                     "save_and_restart_button_loading": "Sauvegarde...",
-                    "persistent_volume_label": "Volume Persistant",
-                    "env_vars_label": "Variables d'Environnement"
+                    "persistent_volume_label": "Volume Persistant"
+                },
+                "database": {
+                    "title": "Base de Données",
+                    "create_button": "Créer la base de données",
+                    "dashboard_title": "Tableau de Bord de la Base de Données",
+                    "connection_info_title": "Informations de Connexion",
+                    "host": "Hôte",
+                    "port": "Port",
+                    "db_name": "Nom de la base",
+                    "username": "Utilisateur",
+                    "password": "Mot de passe",
+                    "link_to_project_title": "Lier à un Projet",
+                    "no_projects_to_link": "Vous n'avez aucun projet disponible pour lier cette base de données.",
+                    "select_project": "Sélectionnez un projet...",
+                    "link_button": "Lier au projet",
+                    "unlink_button": "Délier du projet",
+                    "delete_button": "Supprimer la base de données",
+                    "confirm_delete": "Êtes-vous sûr de vouloir supprimer définitivement cette base de données ? Cette action est irréversible.",
+                    "no_db_linked": "Aucune base de données n'est liée à ce projet.",
+                    "unlinked_db_found": "Vous avez une base de données existante non liée ('{name}').",
+                    "link_this_db_button": "Lier cette base de données",
+                    "create_and_link_button": "Créer & Lier une nouvelle BDD"
                 },
                 "admin": {
                     "title": "Tableau de bord admin",
@@ -280,16 +565,20 @@ pub fn app() -> Html
                     "GITHUB_ACCOUNT_NOT_LINKED": "Votre compte GitHub n'est pas lié. Vous devez le lier pour pouvoir déployer depuis un dépôt.",
                     "GITHUB_REPO_NOT_ACCESSIBLE": "L'application Hangar n'a pas accès à ce dépôt. Veuillez mettre à jour les permissions de votre installation. Puis réessayez.",
                     "GITHUB_PACKAGE_NOT_PUBLIC": "Le déploiement direct depuis ghcr.io a échoué. Veuillez vous assurer que votre paquet est bien en mode 'Public'.",
-                    "DEFAULT": "Une erreur inattendue est survenue. Veuillez contacter un administrateur."
+                    "DEFAULT": "Une erreur inattendue est survenue. Veuillez contacter un administrateur.",
+                    "DATABASE_ALREADY_EXISTS": "Vous possédez déjà une base de données. Une seule est autorisée par utilisateur.",
+                    "LINK_FAILED": "La liaison de la base de données au projet a échoué.",
+                    "NOT_FOUND": "La ressource demandée n'a pas été trouvée."
                 }
-            }"#,
+            }
+            "#,
         ),
-
     ]);
 
     let default_language = window()
         .and_then(|w| w.navigator().language())
-        .map(|lang| {
+        .map(|lang| 
+        {
             if lang.starts_with("fr") 
             {
                 "fr".to_string()
@@ -313,10 +602,13 @@ pub fn app() -> Html
         <I18nProvider ..config>
             <UserProvider>
                 <BrowserRouter>
-                    <Nav />
-                    <main>
-                        <Switch<AppRoute> render={switch} />
-                    </main>
+                    <div style="display: flex; flex-direction: column; min-height: 100vh;">
+                        <Nav />
+                        <main style="flex-grow: 1;">
+                            <Switch<AppRoute> render={switch} />
+                        </main>
+                        <Footer />
+                    </div>
                 </BrowserRouter>
             </UserProvider>
         </I18nProvider>

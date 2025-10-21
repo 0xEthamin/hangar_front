@@ -1,4 +1,4 @@
-use crate::{components::protected_route::ProtectedRoute, pages::{self, admin, create_project, project_dashboard}};
+use crate::{components::protected_route::ProtectedRoute, pages::{self, admin, create_project, database_dashboard, project_dashboard}};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -13,8 +13,16 @@ pub enum AppRoute
     CreateProject,
     #[at("/projects/:id")]
     ProjectDashboard { id: i32 },
+    #[at("/databases/:id")]
+    DatabaseDashboard { id: i32 },
     #[at("/admin")]
     Admin,
+    #[at("/about")]
+    About,
+    #[at("/terms")]
+    Terms,
+    #[at("/contact")]
+    Contact,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -38,12 +46,21 @@ pub fn switch(route: AppRoute) -> Html
                 <project_dashboard::ProjectDashboard project_id={id} />
             </ProtectedRoute>
         },
+        AppRoute::DatabaseDashboard { id } => html!
+        {
+            <ProtectedRoute>
+                <database_dashboard::DatabaseDashboard db_id={id} />
+            </ProtectedRoute>
+        },
         AppRoute::Admin => html! 
         {
             <ProtectedRoute>
                 <admin::Admin />
             </ProtectedRoute>
         },
+        AppRoute::About => html! { <pages::about::About /> },
+        AppRoute::Terms => html! { <pages::terms::Terms /> },
+        AppRoute::Contact => html! { <pages::contact::Contact /> },
         AppRoute::NotFound => html! { <pages::not_found::NotFound /> },
     }
 }

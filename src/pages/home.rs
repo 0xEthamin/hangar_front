@@ -1,9 +1,9 @@
 use crate::
 {
     contexts::user_context::use_user,
-    models::project::{Project, ProjectSourceType},
+    models::{database::DatabaseDetails, project::{Project, ProjectSourceType}},
     router::AppRoute,
-    services::project_service,
+    services::{database_service, project_service},
 };
 use i18nrs::yew::use_translation;
 use yew::prelude::*;
@@ -47,10 +47,12 @@ fn dashboard() -> Html
     let user_context = use_user();
     let owned_projects = use_state(|| None::<Vec<Project>>);
     let participating_projects = use_state(|| None::<Vec<Project>>);
+    let unlinked_db = use_state(|| None::<DatabaseDetails>);
 
     {
         let owned_projects = owned_projects.clone();
         let participating_projects = participating_projects.clone();
+        let unlinked_db = unlinked_db.clone();
 
         use_effect_with((), move |_| 
         {
@@ -74,6 +76,18 @@ fn dashboard() -> Html
                         participating_projects.set(Some(vec![]));
                     }
                 }
+                let unlinked_db = unlinked_db.clone();
+                wasm_bindgen_futures::spawn_local(async move 
+                {
+                    if let Ok(db) = database_service::get_my_database().await 
+                    {
+                        if db.project_id.is_none() 
+                        {
+                            unlinked_db.set(Some(db));
+                        }
+                    }
+                });
+
             });
             || ()
         });
@@ -96,7 +110,7 @@ fn dashboard() -> Html
 
             <section class="projects-section">
                 <h2>{ i18n.t("dashboard.owned_projects_title") }</h2>
-                <ProjectGrid projects={(*owned_projects).clone()} empty_message={i18n.t("dashboard.empty_state_owned")} />
+                <ProjectGrid projects={(*owned_projects).clone()} unlinked_db={(*unlinked_db).clone()} empty_message={i18n.t("dashboard.empty_state_owned")} />
             </section>
 
             <section class="projects-section" style="margin-top: var(--spacing-xxl)">
@@ -111,6 +125,8 @@ fn dashboard() -> Html
 struct ProjectGridProps 
 {
     projects: Option<Vec<Project>>,
+    #[prop_or_default] 
+    unlinked_db: Option<DatabaseDetails>,
     empty_message: String,
 }
 
@@ -119,21 +135,31 @@ fn project_grid(props: &ProjectGridProps) -> Html
 {
     let (i18n, _) = use_translation();
 
-    match &props.projects 
+    match (&props.projects, &props.unlinked_db)
     {
-        Some(projects) if projects.is_empty() => html! 
+        (Some(projects), db) if projects.is_empty() && db.is_none() => html! 
         {
-            <div class="empty-state">
+             <div class="empty-state">
                 <p>{ &props.empty_message }</p>
             </div>
         },
-        Some(projects) => html! 
+        (Some(projects), db) => html! 
         {
             <div class="project-grid">
                 { for projects.iter().map(|p| project_card(p, &i18n)) }
+                {
+                    if let Some(db_details) = db 
+                    {
+                        database_card(db_details, &i18n)
+                    } 
+                    else 
+                    {
+                        html!{}
+                    }
+                }
             </div>
         },
-        None => html! { <div class="loading-spinner">{ i18n.t("common.loading") }</div> },
+        (None, _) => html! { <div class="loading-spinner">{ i18n.t("common.loading") }</div> },
     }
 }
 
@@ -160,6 +186,29 @@ fn project_card(project: &Project, i18n: &i18nrs::I18n) -> Html
                  <div class="project-details">
                     <span>{ i18n.t("common.source_url") }</span>
                     <span class="detail-value" style="word-break: break-all;">{ &project.source_url }</span>
+                </div>
+            </div>
+        </Link<AppRoute>>
+    }
+}
+
+fn database_card(db: &DatabaseDetails, i18n: &i18nrs::I18n) -> Html
+{
+    html!
+    {
+        <Link<AppRoute> to={AppRoute::DatabaseDashboard { id: db.id }} classes="card-link">
+            <div class="card project-card">
+                <div class="project-header">
+                    <h3>{ &db.database_name }</h3>
+                    <img src="/assets/database.svg" title="Database" alt="Database" style="height: 24px; width: 24px;" />
+                </div>
+                 <div class="project-details">
+                    <span>{ i18n.t("database.db_name") }</span>
+                    <span class="detail-value" style="word-break: break-all;">{ &db.database_name }</span>
+                </div>
+                <div class="project-details">
+                    <span>{ i18n.t("database.username") }</span>
+                    <span class="detail-value">{ &db.username }</span>
                 </div>
             </div>
         </Link<AppRoute>>

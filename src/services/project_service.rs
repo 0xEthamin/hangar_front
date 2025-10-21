@@ -304,6 +304,25 @@ pub async fn update_project_image(project_id: i32, new_image_url: &str) -> Resul
     Ok(())
 }
 
+pub async fn rebuild_project(project_id: i32) -> Result<(), ApiError>
+{
+    let response = Request::put(&format!("{}/projects/{}/rebuild", API_ROOT, project_id))
+        .send()
+        .await
+        .map_err(|e| ApiError 
+        {
+            error_code: "NETWORK_ERROR".to_string(),
+            details: Some(e.to_string()),
+        })?;
+
+    if !response.ok()
+    {
+        return Err(parse_detailed_error_response(response).await);
+    }
+
+    Ok(())
+}
+
 pub async fn add_participant(project_id: i32, participant_id: &str) -> Result<(), ApiError> 
 {
     let payload = ParticipantPayload 
