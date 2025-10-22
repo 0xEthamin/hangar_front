@@ -3,16 +3,23 @@ FROM rust:1.89-alpine AS builder
 
 RUN apk add --no-cache build-base openssl-dev pkgconfig
 
+RUN rustup target add wasm32-unknown-unknown
+
 RUN cargo install trunk --locked
 
 WORKDIR /usr/src/app
 
+# Copier les fichiers de dépendances
 COPY Cargo.toml Cargo.lock ./
+
+# Créer un build factice pour mettre en cache les dépendances
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
-    cargo build --release
+    cargo build --release && \
+    cargo build --release --target wasm32-unknown-unknown
 
-RUN rm -f target/release/deps/hangar_front*
+# Nettoyer les artefacts du build factice
+RUN rm -rf src target/release/deps/hangar_front* target/wasm32-unknown-unknown/release/deps/hangar_front*
 
 COPY . .
 
