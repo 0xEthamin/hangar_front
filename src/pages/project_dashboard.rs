@@ -1044,6 +1044,8 @@ fn database_info_card(props: &DatabaseInfoCardProps) -> Html {
                             <p><strong>{ i18n.t("database.host") }{": "}</strong> <span class="detail-value">{ &db.host }</span></p>
                             <p><strong>{ i18n.t("database.port") }{": "}</strong> <span class="detail-value">{ db.port }</span></p>
                             <p><strong>{ i18n.t("database.db_name") }{":"}</strong> <span class="detail-value">{ &db.database_name }</span></p>
+                            <p><strong>{ i18n.t("database.username") }{":"}</strong> <span class="detail-value">{ &db.username }</span></p>
+                            <p><strong>{ i18n.t("database.password") }{":"}</strong> <span class="detail-value">{ &db.password }</span></p>
                         </div>
                     }
                 } else {
@@ -1198,10 +1200,15 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html {
     };
 
     let p = &details.project;
-    let has_control_access = user_context
+    let has_strong_access = user_context
         .user
         .as_ref()
         .map_or(false, |u| u.is_admin || u.login == p.owner);
+
+    let has_weak_access = user_context
+        .user
+        .as_ref()
+        .map_or(false, |u| u.is_admin || u.login == p.owner || details.participants.contains(&u.login));
 
     html! {
         <div>
@@ -1212,11 +1219,11 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html {
             <DatabaseInfoCard
                 project_details={details.clone()}
                 my_database={my_db_option.clone()}
-                has_control_access={has_control_access}
+                has_control_access={has_strong_access}
                 on_update={on_update.clone()}
             />
 
-            if has_control_access {
+            if has_weak_access {
                 <ProjectControls project_id={p.id} on_update={on_update.clone()} />
             }
 
@@ -1227,13 +1234,17 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html {
                 <ProjectMetricsDisplay project_id={p.id} />
             </div>
 
-            if has_control_access {
+            if has_strong_access 
+            {
                 <ParticipantManager
                     project_id={p.id}
                     participants={details.participants.clone()}
                     on_update={on_update.clone()}
                 />
-                
+            }
+
+            if has_weak_access
+            {
                 <EnvManager
                     project_id={p.id}
                     current_env_vars={p.env_vars.clone()}
@@ -1246,13 +1257,17 @@ pub fn project_dashboard(props: &ProjectDashboardProps) -> Html {
                     source_type={p.source.clone()}
                     on_update={on_update.clone()}
                 />
-
+            }  
+                
+            if has_strong_access 
+            {
                 <DangerZone
                     project_id={p.id}
                     project_name={p.name.clone()}
                     has_linked_database={details.database.is_some()}
                 />
             }
+            
         </div>
     }
 }
